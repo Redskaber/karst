@@ -5,7 +5,7 @@
 //! Span: source code position unvariable exp
 //!   - error position to source code
 //!   - debug to use check code -> IR -> source code
-//!   ...
+//!
 
 use core::fmt;
 
