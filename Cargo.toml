@@ -1,0 +1,23 @@
+[workspace]
+resolver = "3"
+members = ["crates/karst_span"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT"
+authors = ["redskaber"]
+
+
+[package]
+name = "karst"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+discription = "this project is redskaber think tank"
+
+[dependencies]
+karst_span = { path = "crates/karst_span" }
