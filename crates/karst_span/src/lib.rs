@@ -1,14 +1,9 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! @path: karst/crates/karst_span/lib.rs
+//! @author: redskaber
+//! @datetime: 2026-09-25
+//! @discription: karst::crates::karst_span
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod span;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+use span::{ByteOffset, ExpansionId, FileId, Span};
+
