@@ -6,4 +6,3 @@
 pub mod span;
 
 use span::{ByteOffset, ExpansionId, FileId, Span};
-

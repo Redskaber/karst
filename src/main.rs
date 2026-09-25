@@ -5,7 +5,6 @@
 
 use karst_span::span::*;
 
-
 fn main() {
     println!("Hello, world!");
 }

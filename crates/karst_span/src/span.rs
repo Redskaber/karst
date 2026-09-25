@@ -7,9 +7,7 @@
 //!   - debug to use check code -> IR -> source code
 //!   ...
 
-
 use core::fmt;
-
 
 /// source file id
 pub type FileId = u32;
@@ -19,7 +17,6 @@ pub type ByteOffset = u32;
 
 /// macro expansion id
 pub type ExpansionId = u32;
-
 
 /// source position exp
 /// some span: file_id + expansion_id => pin
@@ -34,7 +31,10 @@ pub struct Span {
 impl Span {
     pub fn new(file_id: FileId, start: ByteOffset, end: ByteOffset) -> Self {
         Span {
-            file_id, start, end, expansion_id: 0,
+            file_id,
+            start,
+            end,
+            expansion_id: 0,
         }
     }
 
@@ -53,7 +53,7 @@ impl Span {
     /// merge if file_id eq else no thing
     pub fn merge(self, other: Span) -> Span {
         if self.file_id != other.file_id || self.expansion_id != other.expansion_id {
-            return  self;
+            return self;
         }
         Span {
             start: self.start.min(other.start),
@@ -77,7 +77,6 @@ impl Span {
     }
 }
 
-
 impl fmt::Display for Span {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -95,7 +94,6 @@ impl fmt::Display for Span {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,7 +103,7 @@ mod tests {
         let a = Span::new(0, 5, 10);
         let b = Span::new(0, 8, 20);
         assert_eq!(a.merge(b), Span::new(0, 5, 20));
-        assert_eq!(b.merge(a), Span::new(0, 5,20));
+        assert_eq!(b.merge(a), Span::new(0, 5, 20));
     }
 
     #[test]
