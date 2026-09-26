@@ -7,8 +7,13 @@ name = "karst"
 version = "0.1.0"
 dependencies = [
  "karst_span",
+ "karst_syntax",
 ]
 
 [[package]]
 name = "karst_span"
+version = "0.1.0"
+
+[[package]]
+name = "karst_syntax"
 version = "0.1.0"

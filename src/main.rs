@@ -9,6 +9,8 @@ use karst_span::{
     span::Span,
 };
 
+use karst_syntax::*;
+
 fn main() {
     let mut source_table = SourceTable::new();
     let file_id = source_table.add_file("main.krt", "(+ # 1)");

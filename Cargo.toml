@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/karst_span"]
+members = ["crates/karst_span", "crates/karst_syntax"]
 
 [workspace.package]
 version = "0.1.0"
@@ -20,3 +20,4 @@ discription = "this project is redskaber think tank"
 
 [dependencies]
 karst_span = { path = "crates/karst_span" }
+karst_syntax = { path = "crates/karst_syntax" }
