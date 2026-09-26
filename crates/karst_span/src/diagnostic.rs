@@ -2,13 +2,18 @@
 //! @author: redskaber
 //! @datetime: 2026-09-25
 //! @discription: karst::crates::karst_span::diagnostic
+//! Structured diagnostic framework.
+//!
+//! Inspired by rustc's `Diagnostic` structure:
+//! - **Errors are data, not exceptions**;
+//! - Supports error-recovery strategies (diagnostics can be collected and rendered together);
+//! - Multi-stage error association (`children` sub-diagnostics + `suggestions` fixes).
+//!
+//! The minimal shared representation for all error types is `{ message: String, span: Span }`.
 
 use core::fmt;
 
-use crate::{
-    source_table::{self, SourceTable},
-    span::{self, Span},
-};
+use crate::{source_table::SourceTable, span::Span};
 
 /// diagnostic level
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -19,14 +24,20 @@ pub enum Severity {
     Help,
 }
 
+impl Severity {
+    pub fn label(self) -> &'static str {
+        match self {
+            Severity::Error => "error",
+            Severity::Warning => "warning",
+            Severity::Note => "note",
+            Severity::Help => "help",
+        }
+    }
+}
+
 impl fmt::Display for Severity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Severity::Error => write!(f, "error"),
-            Severity::Warning => write!(f, "warning"),
-            Severity::Note => write!(f, "note"),
-            Severity::Help => write!(f, "help"),
-        }
+        f.write_str(self.label())
     }
 }
 
@@ -36,7 +47,7 @@ pub struct DiagnosticCode(pub u32);
 
 impl DiagnosticCode {
     /// render format
-    /// ```
+    /// ```text
     /// E0001
     /// ```
     pub fn render(self) -> String {
@@ -80,7 +91,7 @@ pub struct Diagnostic {
     /// child diagnostic
     pub children: Vec<SubDiagnostic>,
     /// diagnostic fix tips
-    pub suggestion: Vec<Suggestion>,
+    pub suggestions: Vec<Suggestion>,
 }
 
 impl Diagnostic {
@@ -96,7 +107,7 @@ impl Diagnostic {
             message: message.into(),
             span,
             children: Vec::new(),
-            suggestion: Vec::new(),
+            suggestions: Vec::new(),
         }
     }
 
@@ -111,7 +122,7 @@ impl Diagnostic {
     }
 
     /// extra sub diagnostic (child-link)
-    /// ```
+    /// ```text
     /// diagnostic
     ///  | (sub-diagnostic field)
     ///  []-[]-[]...
@@ -131,7 +142,7 @@ impl Diagnostic {
     }
 
     /// extra suggestion (child-link)
-    /// ```
+    /// ```text
     /// diagnostic
     ///  | (suggestion field)
     ///  []-[]-[]...
@@ -142,7 +153,7 @@ impl Diagnostic {
         span: Span,
         replacement: impl Into<String>,
     ) -> Self {
-        self.suggestion.push(Suggestion {
+        self.suggestions.push(Suggestion {
             message: message.into(),
             span,
             replacement: replacement.into(),
@@ -151,13 +162,13 @@ impl Diagnostic {
     }
 
     pub fn is_error(&self) -> bool {
-        self.severity == Severity::Error
+        matches!(self.severity, Severity::Error)
     }
 }
 
 /// render diagnostic
 /// format:
-/// ```
+/// ```text
 /// error[E0001]: invaild char '#'
 ///   --> main.krf:1:5
 ///    |
@@ -213,7 +224,7 @@ pub fn render_diagnostic(diag: &Diagnostic, source_table: &SourceTable) -> Strin
     }
 
     // help: replace char '#' ->  「1 」
-    for sugg in &diag.suggestion {
+    for sugg in &diag.suggestions {
         out.push_str(&format!(
             "  help: {} -> 「{} 」\n",
             sugg.message, sugg.replacement
@@ -226,27 +237,140 @@ pub fn render_diagnostic(diag: &Diagnostic, source_table: &SourceTable) -> Strin
 mod tests {
     use super::*;
 
-    #[test]
-    fn diagnostic_render_full_shape() {
-        let mut sm = SourceTable::new();
-        let id = sm.add_file("t.krt", "(+ # 1)");
-        let diag = Diagnostic::error(
-            Some(DiagnosticCode(1)),
-            "invaild char '#'",
-            Span::new(id, 3, 4),
-        )
-        .with_child(Severity::Note, "this need oprand", Span::new(id, 0, 7))
-        .with_suggestion("do you need entry 1", Span::new(id, 3, 4), "1");
-        let text = render_diagnostic(&diag, &sm);
-        assert!(text.contains("error[E0001]: invaild char '#'"));
-        assert!(text.contains("--> t.krt:1:4"));
-        assert!(text.contains("note: this need oprand"));
-        assert!(text.contains("help: do you need entry 1"));
+    const SAMPLE_FILE: &str = "t.krt";
+    const SAMPLE_SRC: &str = "(+ # 1)";
+
+    /// Creates a fresh `SourceTable` containing the shared sample source.
+    macro_rules! sample_source_table {
+        () => {{
+            let mut source_table = SourceTable::new();
+            let file_id = source_table.add_file(SAMPLE_FILE, SAMPLE_SRC);
+            (source_table, file_id)
+        }};
     }
 
+    /// Builds a diagnostic that exercises all diagnostic components:
+    /// - primary diagnostic (`Error` with code)
+    /// - child diagnostic (`Note`)
+    /// - suggestion (`Help`)
+    fn build_full_sample(primary: Span, child: Span, suggestion: Span) -> Diagnostic {
+        Diagnostic::error(Some(DiagnosticCode(1)), "invalid character '#'", primary)
+            .with_child(Severity::Note, "expected an operand here", child)
+            .with_suggestion("did you mean to enter `1`?", suggestion, "1")
+    }
+
+    fn assert_contains(haystack: &str, needle: &str) {
+        assert!(
+            haystack.contains(needle),
+            "expected output to contain {:?}, but got:\n{}",
+            needle,
+            haystack
+        );
+    }
+
+    fn assert_not_contains(haystack: &str, needle: &str) {
+        assert!(
+            !haystack.contains(needle),
+            "expected output not to contain {:?}, but got:\n{}",
+            needle,
+            haystack
+        );
+    }
+
+    /// Full rendering: primary diagnostic, child diagnostic, suggestion, and source excerpt.
     #[test]
-    fn code_render() {
+    fn diagnostic_render_full_shape() {
+        let (source_table, file_id) = sample_source_table!();
+        let diagnostic = build_full_sample(
+            Span::new(file_id, 3, 4),
+            Span::new(file_id, 0, 7),
+            Span::new(file_id, 3, 4),
+        );
+
+        let output = render_diagnostic(&diagnostic, &source_table);
+
+        assert_contains(&output, "error[E0001]: invalid character '#'");
+        assert_contains(&output, "--> t.krt:1:4");
+        assert_contains(&output, SAMPLE_SRC);
+        assert_contains(&output, "note: expected an operand here");
+        assert_contains(&output, "help: did you mean to enter `1`?");
+    }
+
+    /// A diagnostic without a code must not render `[EXXXX]`.
+    #[test]
+    fn diagnostic_render_without_code_omits_brackets() {
+        let (source_table, file_id) = sample_source_table!();
+        let diagnostic = Diagnostic::error(None, "invalid character '#'", Span::new(file_id, 3, 4));
+
+        let output = render_diagnostic(&diagnostic, &source_table);
+
+        assert!(output.starts_with("error: invalid character '#'"));
+        assert_not_contains(&output, "error[");
+    }
+
+    /// Warning-level diagnostics use the same rendering path.
+    #[test]
+    fn diagnostic_render_warning_severity_label() {
+        let (source_table, file_id) = sample_source_table!();
+        let diagnostic = Diagnostic::warning(
+            Some(DiagnosticCode(331)),
+            "unused binding",
+            Span::new(file_id, 0, 1),
+        );
+
+        let output = render_diagnostic(&diagnostic, &source_table);
+
+        assert_contains(&output, "warning[E0331]: unused binding");
+    }
+
+    /// No children and no suggestions must not leak `note:` or `help:` lines.
+    #[test]
+    fn diagnostic_render_no_children_no_suggestions() {
+        let (source_table, file_id) = sample_source_table!();
+        let diagnostic = Diagnostic::error(
+            Some(DiagnosticCode(1)),
+            "invalid character '#'",
+            Span::new(file_id, 3, 4),
+        );
+
+        let output = render_diagnostic(&diagnostic, &source_table);
+
+        assert_not_contains(&output, "note:");
+        assert_not_contains(&output, "help:");
+    }
+
+    /// `is_error` returns true only for the `Error` severity.
+    #[test]
+    fn diagnostic_is_error_matches_severity() {
+        let (_, file_id) = sample_source_table!();
+
+        let error = Diagnostic::error(None, "error", Span::new(file_id, 0, 1));
+        let warning = Diagnostic::warning(None, "warning", Span::new(file_id, 0, 1));
+
+        assert!(error.is_error());
+        assert!(!warning.is_error());
+    }
+
+    /// `Display` and `label` must agree on the severity text.
+    #[test]
+    fn severity_label_and_display_match() {
+        for (severity, expected) in [
+            (Severity::Error, "error"),
+            (Severity::Warning, "warning"),
+            (Severity::Note, "note"),
+            (Severity::Help, "help"),
+        ] {
+            assert_eq!(severity.label(), expected);
+            assert_eq!(format!("{}", severity), expected);
+        }
+    }
+
+    /// Diagnostic codes are zero-padded to four digits and are not truncated beyond four digits.
+    #[test]
+    fn diagnostic_code_render_zero_pads_to_four_digits() {
         assert_eq!(DiagnosticCode(1).render(), "E0001");
         assert_eq!(DiagnosticCode(331).render(), "E0331");
+        assert_eq!(DiagnosticCode(9999).render(), "E9999");
+        assert_eq!(DiagnosticCode(10_000).render(), "E10000");
     }
 }

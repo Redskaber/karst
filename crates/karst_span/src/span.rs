@@ -2,10 +2,17 @@
 //! @author: redskaber
 //! @datetime: 2026-09-25
 //! @discription: karst::crates::karst_span::span
-//! Span: source code position unvariable exp
-//!   - error position to source code
-//!   - debug to use check code -> IR -> source code
 //!
+//! `Span`: an immutable representation of a source location.
+//!
+//! In the style of rustc, every Token / AST node / IR node / bytecode instruction
+//! carries a `Span`:
+//! - Any error can be precisely located to source;
+//! - The debugger can reverse-lookup bytecode -> IR -> source;
+//! - Incremental compilation can perform fine-grained invalidation based on `Span`.
+//!
+//! Column semantics: **byte offset is the primary key; line/column are only for diagnostic rendering**
+//! — `Span` stores only byte offsets, and line/column are derived at render time by `SourceMap`.
 
 use core::fmt;
 

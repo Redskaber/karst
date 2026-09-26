@@ -10,16 +10,25 @@ use karst_span::{
 };
 
 fn main() {
-    let mut sm = SourceTable::new();
-    let id = sm.add_file("t.krt", "(+ # 1)");
-    let diag = Diagnostic::error(
-        Some(DiagnosticCode(1)),
-        "invaild char '#'",
-        Span::new(id, 3, 4),
-    )
-    .with_child(Severity::Note, "this need oprand", Span::new(id, 0, 7))
-    .with_suggestion("do you need entry 1", Span::new(id, 3, 4), "1");
-    let text = render_diagnostic(&diag, &sm);
+    let mut source_table = SourceTable::new();
+    let file_id = source_table.add_file("main.krt", "(+ # 1)");
 
-    println!("{}", text);
+    let diagnostic = Diagnostic::error(
+        Some(DiagnosticCode(1)),
+        "invalid character '#'",
+        Span::new(file_id, 3, 4),
+    )
+    .with_child(
+        Severity::Note,
+        "expected an operand here",
+        Span::new(file_id, 0, 7),
+    )
+    .with_suggestion("did you mean to enter `1`?", Span::new(file_id, 3, 4), "1");
+
+    let rendered = render_diagnostic(&diagnostic, &source_table);
+    print!("{}", rendered);
+
+    if diagnostic.is_error() {
+        std::process::exit(1);
+    }
 }

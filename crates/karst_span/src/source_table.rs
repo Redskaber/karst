@@ -2,6 +2,13 @@
 //! @author: redskaber
 //! @datetime: 2026-09-25
 //! @discription: karst::crates::karst_span::source_table
+//!
+//! `SourceTable`: the single source of truth for file_id -> source text / line table.
+//!
+//! Responsibilities: derive rendering of `Span` (byte offset) -> line/column;
+//! query source-text line content (diagnostic excerpts).
+//! Line numbers start at 1; columns are rendered by **character count** (not
+//! bytes) starting at 1 — byte offsets remain the primary key.
 
 use std::{rc::Rc, str};
 
@@ -96,7 +103,7 @@ impl SourceTable {
     }
 
     /// Span to readable: "file:line:col[expansion]"
-    /// ```
+    /// ```text
     /// main.krt:3:5
     /// ```
     pub fn render_location(&self, file_id: u32, offset: u32, expansion_id: u32) -> String {
@@ -114,7 +121,7 @@ impl SourceTable {
     }
 
     /// Diagnostic infor excerpt part
-    /// ```
+    /// ```text
     ///    1 | (+ # 1)
     ///      |    ^
     /// ```
