@@ -4,6 +4,7 @@
 //! @discription: karst::crates::karst_syntax
 
 mod scope;
+mod symbol;
 
 use scope::{ScopeId, ScopeSet};
 
