@@ -1,7 +1,7 @@
-//! @path: karst/crates/karst_span/source_map.rs
+//! @path: karst/crates/karst_span/source_table.rs
 //! @author: redskaber
 //! @datetime: 2026-09-25
-//! @discription: karst::crates::karst_span::source_map
+//! @discription: karst::crates::karst_span::source_table
 
 use std::{rc::Rc, str};
 
@@ -10,7 +10,7 @@ use std::{rc::Rc, str};
 pub struct SourceFile {
     pub name: String,
     pub src: Rc<str>,
-    pub line_starts: Vec<u32>,
+    line_starts: Vec<u32>,
 }
 
 impl SourceFile {
@@ -55,13 +55,13 @@ impl SourceFile {
 
 /// from source file content get line starts offset vector
 fn compute_line_starts(src: &str) -> Vec<u32> {
-    let mut starts_offset = vec![0u32];
+    let mut start_offsets = vec![0u32];
     for (i, b) in src.bytes().enumerate() {
         if b == b'\n' {
-            starts_offset.push(i as u32 + 1);
+            start_offsets.push(i as u32 + 1);
         }
     }
-    starts_offset
+    start_offsets
 }
 
 /// Source file register table
@@ -96,7 +96,7 @@ impl SourceTable {
     }
 
     /// Span to readable: "file:line:col[expansion]"
-    /// ```text
+    /// ```
     /// main.krt:3:5
     /// ```
     pub fn render_location(&self, file_id: u32, offset: u32, expansion_id: u32) -> String {
@@ -114,7 +114,7 @@ impl SourceTable {
     }
 
     /// Diagnostic infor excerpt part
-    /// ```text
+    /// ```
     ///    1 | (+ # 1)
     ///      |    ^
     /// ```
@@ -124,7 +124,7 @@ impl SourceTable {
                 let (line, col) = f.line_col(offset);
                 let text = f.line_text(line);
                 let padding = " ".repeat(col.saturating_sub(1) as usize);
-                format!("{:>4} | {}\n     |{}^", line, text, padding)
+                format!("{:>4} | {}\n     | {}^", line, text, padding)
             }
             None => String::new(),
         }

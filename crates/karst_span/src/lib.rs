@@ -3,8 +3,12 @@
 //! @datetime: 2026-09-25
 //! @discription: karst::crates::karst_span
 
-pub mod source_map;
+pub mod diagnostic;
+pub mod source_table;
 pub mod span;
 
-use source_map::{SourceFile, SourceTable};
+use diagnostic::{
+    Diagnostic, DiagnosticCode, Severity, SubDiagnostic, Suggestion, render_diagnostic,
+};
+use source_table::{SourceFile, SourceTable};
 use span::{ByteOffset, ExpansionId, FileId, Span};
