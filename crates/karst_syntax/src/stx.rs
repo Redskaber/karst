@@ -2,6 +2,8 @@
 //! @author: redskaber
 //! @datetime: 2026-09-27
 //! @discription: karst::crates::karst_syntax::stx
+//!
+//! syntax object `Stx` (Syntax Object): Reader input, Expander input
 
 use std::rc::Rc;
 
