@@ -7,3 +7,4 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+karst_span = { path = "../karst_span" }

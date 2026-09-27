@@ -17,3 +17,6 @@ version = "0.1.0"
 [[package]]
 name = "karst_syntax"
 version = "0.1.0"
+dependencies = [
+ "karst_span",
+]
