@@ -1,0 +1,12 @@
+[package]
+name = "karst_reader"
+edition = "2024"
+discription = "compiler reader part about lexer and parse"
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+karst_span = { path = "../karst_span" }
+karst_syntax = { path = "../karst_syntax" }

@@ -3,13 +3,13 @@
 //! @datetime: 2026-09-26
 //! @discription: karst::crates::karst_syntax
 
-mod scope;
-mod stx;
-mod symbol;
+pub mod scope;
+pub mod stx;
+pub mod symbol;
 
-use scope::{ScopeId, ScopeSet};
-use stx::{Stx, StxDatum, StxLiteral};
-use symbol::{Keyword, Symbol, SymbolTable};
+pub use scope::{ScopeId, ScopeSet};
+pub use stx::{Stx, StxDatum, StxLiteral};
+pub use symbol::{Keyword, Symbol, SymbolTable};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Phase {

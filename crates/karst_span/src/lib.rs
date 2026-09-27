@@ -24,8 +24,8 @@ pub mod diagnostic;
 pub mod source_table;
 pub mod span;
 
-use diagnostic::{
+pub use diagnostic::{
     Diagnostic, DiagnosticCode, Severity, SubDiagnostic, Suggestion, render_diagnostic,
 };
-use source_table::{SourceFile, SourceTable};
-use span::{ByteOffset, ExpansionId, FileId, Span};
+pub use source_table::{SourceFile, SourceTable};
+pub use span::{ByteOffset, ExpansionId, FileId, Span};
