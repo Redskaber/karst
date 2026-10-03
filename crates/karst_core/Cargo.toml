@@ -1,13 +1,13 @@
-# @path: harst/crate/karst_reader/Cargo.toml
+# @path: harst/crate/karst_core/Cargo.toml
 # @author: redskaber
-# @datetime: 2026-09-30
+# @datetime: 2026-10-01
 # @discription:
-#  karst_reader -- ( Lexer + Parser ) producing spanned SyntaxObjects - Layer 2 crate (span -> syntax -> reader)
+#  karst_core -- CoreExpr definition (the frozen semantic primitices)
 
 [package]
-name = "karst_reader"
+name = "karst_core"
 edition = "2024"
-discription = "Lexer + Parser producing spanned SyntaxObjects"
+description = "CoreExpr definition (the frozen semantic primitices)"
 version.workspace = true
 rust-version.workspace = true
 license.workspace = true

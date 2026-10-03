@@ -1,11 +1,19 @@
+# @path: harst/crate/karst_syntax/Cargo.toml
+# @author: redskaber
+# @datetime: 2026-09-30
+# @discription:
+#  karst_syntax -- SyntaxObject model (datum + span + scope-set + phase) -> Layer 1 crate
+
+
 [package]
 name = "karst_syntax"
 edition = "2024"
-discription = "Syntax object, Symbol interning, ScopeSet"
+discription = "Syntax object, ScopeSet, Phase"
 version.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+publish = false
 
 [dependencies]
 karst_span = { path = "../karst_span" }

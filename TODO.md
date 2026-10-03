@@ -1,3 +1,3 @@
 # TODO
 
-- karst_syntax::symbol: `nfc handle`
+- karst_syntax::symbol: `interner`, `nfc handle`

@@ -1,76 +1,81 @@
 //! @path: karst/crates/karst_reader/token.rs
 //! @author: redskaber
-//! @datetime: 2026-09-27
+//! @datetime: 2026-10-02
 //! @discription: karst::crates::karst_reader::token
+//!
+//! the typed token stream of the S-experssion skin
 
-use std::rc::Rc;
+use core::fmt;
 
 use karst_span::Span;
-use karst_syntax::{Keyword, ScopeSet, Symbol};
+use karst_syntax::Symbol;
 
-/// Operator
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Operator {
-    Add, // +
-    Sub, // -
-    Nul, // *
-    Div, // /
-    Mod, // %
-    Lt,  // >
-    Gt,  // >=
-    Le,  // <
-    Ge,  // >=
-    Eq,  // ==
-}
-
-/// Delimiter
+/// Delimiter - S-experssion `(`, `)`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Delimiter {
-    OpenParen,    // (
-    CloseParen,   // )
-    OpenBracket,  // [
-    CloseBracket, // ]
+    Open,  // (
+    Close, // )
 }
 
 impl Delimiter {
-    pub fn as_char(self) -> char {
+    pub fn kind_name(&self) -> &'static str {
         match self {
-            Delimiter::OpenParen => '(',
-            Delimiter::CloseParen => ')',
-            Delimiter::OpenBracket => '[',
-            Delimiter::CloseBracket => ']',
+            Delimiter::Open => "open",
+            Delimiter::Close => "close",
         }
     }
+}
 
-    pub fn closing_of(open: Delimiter) -> Delimiter {
-        match open {
-            Delimiter::OpenParen => Delimiter::CloseParen,
-            Delimiter::OpenBracket => Delimiter::CloseBracket,
-            _ => Delimiter::CloseParen, // caller handle
-        }
+impl fmt::Display for Delimiter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Delimiter::Open => "(",
+            Delimiter::Close => ")",
+        })
     }
 }
 
 /// token kind
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
+    Delimiter(Delimiter),
+    Identifier(Symbol),
+
     /// literal
     IntLitral(i64),
     FloatLiteral(f64),
-    StringLiteral(Rc<str>),
+    StringLiteral(String),
     BoolLiteral(bool),
-    NilLiteral,
 
-    /// ident
-    Identifier(Symbol),
-    QuoteShorthand, // 'x => (quote x)
-    Keyword(Keyword),
-    Operator(Operator, Symbol), // sign
-    Delimiter(Delimiter),
-
-    /// interface macro extra
-    MacroInvocation(Symbol),
     Eof,
+}
+
+impl TokenKind {
+    pub fn kind_name(&self) -> &'static str {
+        match self {
+            TokenKind::Delimiter(_) => "delimiter",
+            TokenKind::Identifier(_) => "ident",
+            TokenKind::IntLitral(_) => "int",
+            TokenKind::FloatLiteral(_) => "float",
+            TokenKind::StringLiteral(_) => "string",
+            TokenKind::BoolLiteral(_) => "bool",
+            TokenKind::Eof => "eof",
+        }
+    }
+}
+
+impl fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TokenKind::Delimiter(d) => write!(f, "{d}"),
+            TokenKind::Identifier(s) => f.write_str(s.as_str()),
+            TokenKind::IntLitral(v) => write!(f, "{v}"),
+            TokenKind::FloatLiteral(v) => write!(f, "{v:?}"),
+            TokenKind::StringLiteral(v) => write!(f, "{v:?}"),
+            TokenKind::BoolLiteral(v) => write!(f, "#{}", if *v { "t" } else { "f" }),
+            TokenKind::Eof => f.write_str("end of input"),
+        }
+    }
 }
 
 /// token
@@ -80,53 +85,18 @@ pub struct Token {
     pub kind: TokenKind,
     /// token position
     pub span: Span,
-    /// token scopes
-    pub scopes: ScopeSet,
 }
 
 impl Token {
-    pub fn is_eof(&self) -> bool {
-        matches!(self.kind, TokenKind::Eof)
+    pub fn new(kind: TokenKind, span: Span) -> Token {
+        Token { kind, span }
     }
-
-    pub fn is_keyword(&self, kw: Keyword) -> bool {
-        matches!(&self.kind, TokenKind::Keyword(k) if *k == kw)
+    pub fn kind_name(&self) -> &'static str {
+        self.kind.kind_name()
     }
 }
 
-/// reader error handle
-#[derive(Debug, Clone, PartialEq)]
-pub struct ReadError {
-    pub message: String,
-    pub span: Span,
-}
-
-impl ReadError {
-    pub fn new(message: impl Into<String>, span: Span) -> Self {
-        ReadError {
-            message: message.into(),
-            span,
-        }
-    }
-
-    pub fn unexpected_token(token: &Token) -> Self {
-        ReadError::new(format!("unexpected token: {:?}", token.kind), token.span)
-    }
-
-    pub fn unclosed_delimiter(open: Delimiter, span: Span) -> Self {
-        ReadError::new(
-            format!(
-                "unclosing delimiter: '{}'",
-                Delimiter::closing_of(open).as_char()
-            ),
-            span,
-        )
-    }
-
-    pub fn stray_closing_delimiter(close: Delimiter, span: Span) -> Self {
-        ReadError::new(
-            format!("stray closing delimiter: '{}'", close.as_char()),
-            span,
-        )
-    }
+#[cfg(test)]
+mod tests {
+    // more ...
 }
