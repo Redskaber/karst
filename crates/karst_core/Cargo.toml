@@ -1,7 +1,7 @@
 # @path: harst/crate/karst_core/Cargo.toml
 # @author: redskaber
 # @datetime: 2026-10-01
-# @discription:
+# @description:
 #  karst_core -- CoreExpr definition (the frozen semantic primitices)
 
 [package]

@@ -5,6 +5,7 @@
 //!
 //! karst root aggregation crate of th karst compiler workspace
 
+pub use karst_core as core;
 pub use karst_reader as reader;
 pub use karst_span as span;
 pub use karst_syntax as syntax;

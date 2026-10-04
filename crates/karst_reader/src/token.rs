@@ -42,7 +42,7 @@ pub enum TokenKind {
     Identifier(Symbol),
 
     /// literal
-    IntLitral(i64),
+    IntLiteral(i64),
     FloatLiteral(f64),
     StringLiteral(String),
     BoolLiteral(bool),
@@ -54,8 +54,8 @@ impl TokenKind {
     pub fn kind_name(&self) -> &'static str {
         match self {
             TokenKind::Delimiter(_) => "delimiter",
-            TokenKind::Identifier(_) => "ident",
-            TokenKind::IntLitral(_) => "int",
+            TokenKind::Identifier(_) => "identifier",
+            TokenKind::IntLiteral(_) => "int",
             TokenKind::FloatLiteral(_) => "float",
             TokenKind::StringLiteral(_) => "string",
             TokenKind::BoolLiteral(_) => "bool",
@@ -69,7 +69,7 @@ impl fmt::Display for TokenKind {
         match self {
             TokenKind::Delimiter(d) => write!(f, "{d}"),
             TokenKind::Identifier(s) => f.write_str(s.as_str()),
-            TokenKind::IntLitral(v) => write!(f, "{v}"),
+            TokenKind::IntLiteral(v) => write!(f, "{v}"),
             TokenKind::FloatLiteral(v) => write!(f, "{v:?}"),
             TokenKind::StringLiteral(v) => write!(f, "{v:?}"),
             TokenKind::BoolLiteral(v) => write!(f, "#{}", if *v { "t" } else { "f" }),
@@ -96,7 +96,3 @@ impl Token {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    // more ...
-}

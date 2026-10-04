@@ -5,8 +5,8 @@
 //!
 //! CoreExpr: the frozen semantic primitive expression ADT
 
-use core::fmt;
 use std::collections::HashSet;
+use std::fmt;
 
 use crate::error::{CoreError, from_syntax_symbol};
 
@@ -50,7 +50,7 @@ impl fmt::Display for LiteralValue {
     }
 }
 
-/// Let Binding
+/// One `let` binding site: `name` bound to `value`, covering `span`
 #[derive(Debug, Clone, PartialEq)]
 pub struct Binding {
     pub span: Span,
@@ -68,7 +68,7 @@ impl Binding {
     }
 }
 
-/// Handle Clause
+/// One `handle` clause: `handler` installed for `effect`, at `span`
 #[derive(Debug, Clone, PartialEq)]
 pub struct HandlerClause {
     pub span: Span,
@@ -159,7 +159,7 @@ impl CoreExpr {
         match self {
             CoreExpr::Fn { .. } => "fn",
             CoreExpr::Apply { .. } => "apply",
-            CoreExpr::If { .. } => "fn",
+            CoreExpr::If { .. } => "if",
             CoreExpr::Var { .. } => "var",
             CoreExpr::Literal { .. } => "literal",
             CoreExpr::Assign { .. } => "assign",
@@ -233,7 +233,7 @@ impl CoreExpr {
         }
     }
 
-    /// fn constructor
+    /// Checked `fn` constructor from source-shaped parameter text
     pub fn fn_(span: Span, params: &[&str], body: CoreExpr) -> Result<CoreExpr, CoreError> {
         let symbols = params
             .iter()
@@ -277,6 +277,7 @@ impl CoreExpr {
         })
     }
 
+    /// Checked `handle` constructor over pre-built clauses
     pub fn handle(
         span: Span,
         body: CoreExpr,
@@ -306,5 +307,270 @@ impl fmt::Display for CoreExpr {
 
 #[cfg(test)]
 mod tests {
-    // more ..
+    //! Unit tests for the CoreExpr / LiteralValue feature points (sub-stage test doc FP2-FP4).
+
+    use super::*;
+    use karst_span::{ByteOffset, ExpansionId, FileId};
+
+    fn span(start: u32, end: u32) -> Span {
+        Span::new(
+            FileId(0),
+            ByteOffset(start),
+            ByteOffset(end),
+            ExpansionId::ROOT,
+        )
+        .expect("test fixture span must be well-formed")
+    }
+
+    fn sample_literal() -> CoreExpr {
+        CoreExpr::Literal {
+            span: span(30, 32),
+            value: LiteralValue::Int(42),
+        }
+    }
+
+    // ---------- positive ----------
+
+    #[test]
+    fn kind_name_covers_all_nine_variants() {
+        let body = sample_literal();
+        let cases: Vec<(CoreExpr, &'static str)> = vec![
+            (CoreExpr::fn_(span(0, 1), &["x"], body).unwrap(), "fn"),
+            (
+                CoreExpr::Apply {
+                    span: span(0, 1),
+                    func: Box::new(sample_literal()),
+                    args: vec![],
+                },
+                "apply",
+            ),
+            (
+                CoreExpr::If {
+                    span: span(0, 1),
+                    cond: Box::new(sample_literal()),
+                    then_branch: Box::new(sample_literal()),
+                    else_branch: Box::new(sample_literal()),
+                },
+                "if",
+            ),
+            (CoreExpr::var(span(0, 1), "x").unwrap(), "var"),
+            (sample_literal(), "literal"),
+            (
+                CoreExpr::assign(span(0, 1), "x", sample_literal()).unwrap(),
+                "assign",
+            ),
+            (
+                CoreExpr::Let {
+                    span: span(0, 1),
+                    bindings: vec![],
+                    body: Box::new(sample_literal()),
+                },
+                "let",
+            ),
+            (
+                CoreExpr::perform(span(0, 1), "read", vec![]).unwrap(),
+                "perform",
+            ),
+            (
+                CoreExpr::handle(span(0, 1), sample_literal(), vec![]).unwrap(),
+                "handle",
+            ),
+        ];
+        for (expr, expected) in &cases {
+            assert_eq!(expr.kind_name(), *expected);
+            assert_eq!(expr.to_string(), *expected);
+        }
+        assert_eq!(cases.len(), 9, "all nine primitives must be covered");
+
+        let literal_kinds = [
+            (LiteralValue::Int(1), "int"),
+            (LiteralValue::Float(1.0), "float"),
+            (LiteralValue::Bool(true), "bool"),
+            (LiteralValue::String("s".to_owned()), "string"),
+            (LiteralValue::Nil, "nil"),
+            (
+                LiteralValue::Pair(Box::new(LiteralValue::Nil), Box::new(LiteralValue::Nil)),
+                "pair",
+            ),
+        ];
+        for (value, expected) in &literal_kinds {
+            assert_eq!(value.kind_name(), *expected);
+        }
+    }
+
+    #[test]
+    fn literal_value_display_forms() {
+        assert_eq!(LiteralValue::Int(42).to_string(), "42");
+        assert_eq!(LiteralValue::Int(-7).to_string(), "-7");
+        assert_eq!(LiteralValue::Float(2.5).to_string(), "2.5");
+        // Debug-style float formatting keeps the float-ness visible.
+        assert_eq!(LiteralValue::Float(3.0).to_string(), "3.0");
+        assert_eq!(LiteralValue::Bool(true).to_string(), "true");
+        assert_eq!(LiteralValue::Bool(false).to_string(), "false");
+        assert_eq!(
+            LiteralValue::String("abc".to_owned()).to_string(),
+            "\"abc\""
+        );
+        assert_eq!(LiteralValue::Nil.to_string(), "nil");
+        let pair = LiteralValue::Pair(
+            Box::new(LiteralValue::Int(1)),
+            Box::new(LiteralValue::Int(2)),
+        );
+        assert_eq!(pair.to_string(), "(1 . 2)");
+        let nested = LiteralValue::Pair(Box::new(pair), Box::new(LiteralValue::Int(3)));
+        assert_eq!(nested.to_string(), "((1 . 2) . 3)");
+    }
+
+    #[test]
+    fn span_accessor_returns_constructor_span() {
+        let s = span(10, 20);
+        let expr = CoreExpr::var(s, "x").unwrap();
+        assert_eq!(expr.span(), s);
+
+        let apply = CoreExpr::Apply {
+            span: s,
+            func: Box::new(CoreExpr::var(s, "f").unwrap()),
+            args: vec![sample_literal()],
+        };
+        assert_eq!(apply.span(), s);
+        assert_eq!(apply.span().to_string(), "file#0:10..20");
+    }
+
+    #[test]
+    fn visit_spans_reports_exact_preorder() {
+        // let (100..200) {
+        //   x = literal(30..32)   [reused fixture]
+        // } in apply(150..200) { var f(150..180), literal(180..200) }
+        let program = CoreExpr::Let {
+            span: span(100, 200),
+            bindings: vec![Binding::new(span(100, 150), "x", sample_literal()).unwrap()],
+            body: Box::new(CoreExpr::Apply {
+                span: span(150, 200),
+                func: Box::new(CoreExpr::var(span(150, 180), "f").unwrap()),
+                args: vec![CoreExpr::Literal {
+                    span: span(180, 200),
+                    value: LiteralValue::Int(7),
+                }],
+            }),
+        };
+        let mut collected = Vec::new();
+        program.visit_spans(&mut |s| collected.push(s));
+        let starts: Vec<u32> = collected.iter().map(|s| s.start.0).collect();
+        // Pre-order: let, binding site, binding value, apply, func var, arg.
+        assert_eq!(starts, vec![100, 100, 30, 150, 150, 180]);
+        assert_eq!(collected.len(), 6);
+
+        // handle(0..50) { body(10..20) } with clauses at 20..30 / 30..50.
+        let handled = CoreExpr::handle(
+            span(0, 50),
+            CoreExpr::var(span(10, 20), "x").unwrap(),
+            vec![
+                HandlerClause::new(
+                    span(20, 30),
+                    "read",
+                    CoreExpr::var(span(21, 22), "h").unwrap(),
+                )
+                .unwrap(),
+                HandlerClause::new(
+                    span(30, 50),
+                    "write",
+                    CoreExpr::var(span(31, 32), "g").unwrap(),
+                )
+                .unwrap(),
+            ],
+        )
+        .unwrap();
+        let mut spans = Vec::new();
+        handled.visit_spans(&mut |s| spans.push(s.start.0));
+        // handle, body, clause1 site, clause1 handler, clause2 site,
+        // clause2 handler.
+        assert_eq!(spans, vec![0, 10, 20, 21, 30, 31]);
+    }
+
+    // ---------- negative ----------
+
+    #[test]
+    fn fn_constructor_rejects_adjacent_duplicate_params() {
+        let err = CoreExpr::fn_(span(0, 1), &["x", "x"], sample_literal())
+            .expect_err("adjacent duplicate params must be rejected");
+        assert_eq!(
+            err,
+            CoreError::DuplicateParam {
+                name: "x".to_owned()
+            }
+        );
+    }
+
+    #[test]
+    fn fn_constructor_rejects_non_adjacent_duplicate_params() {
+        let err = CoreExpr::fn_(span(0, 1), &["x", "y", "x"], sample_literal())
+            .expect_err("non-adjacent duplicate params must be rejected");
+        assert_eq!(
+            err,
+            CoreError::DuplicateParam {
+                name: "x".to_owned()
+            }
+        );
+    }
+
+    #[test]
+    fn fn_constructor_rejects_invalid_param_symbol() {
+        let err = CoreExpr::fn_(span(0, 1), &["x", "a b"], sample_literal())
+            .expect_err("invalid param text must be rejected");
+        assert!(matches!(err, CoreError::InvalidSymbol { .. }));
+    }
+
+    fn two_read_clauses() -> Vec<HandlerClause> {
+        vec![
+            HandlerClause::new(span(20, 30), "read", sample_literal()).unwrap(),
+            HandlerClause::new(span(30, 40), "read", sample_literal()).unwrap(),
+        ]
+    }
+
+    #[test]
+    fn handle_constructor_rejects_adjacent_duplicate_effects() {
+        let err = CoreExpr::handle(span(0, 1), sample_literal(), two_read_clauses())
+            .expect_err("adjacent duplicate effect clauses must be rejected");
+        assert_eq!(
+            err,
+            CoreError::DuplicateHandler {
+                effect: "read".to_owned()
+            }
+        );
+    }
+
+    #[test]
+    fn handle_constructor_rejects_non_adjacent_duplicate_effects() {
+        let mut clauses = two_read_clauses();
+        clauses.insert(
+            1,
+            HandlerClause::new(span(40, 50), "write", sample_literal()).unwrap(),
+        );
+        let err = CoreExpr::handle(span(0, 1), sample_literal(), clauses)
+            .expect_err("non-adjacent duplicate effect clauses must be rejected");
+        assert_eq!(
+            err,
+            CoreError::DuplicateHandler {
+                effect: "read".to_owned()
+            }
+        );
+    }
+
+    #[test]
+    fn handler_clause_rejects_invalid_effect_symbol() {
+        let err = HandlerClause::new(span(0, 1), "bad name", sample_literal())
+            .expect_err("invalid effect text must be rejected");
+        assert!(matches!(err, CoreError::InvalidSymbol { .. }));
+    }
+
+    #[test]
+    fn var_constructor_rejects_invalid_name() {
+        let err = CoreExpr::var(span(0, 1), "a\tb").expect_err("invalid var text must be rejected");
+        assert_eq!(
+            err,
+            CoreError::InvalidSymbol {
+                text: "a\tb".to_owned()
+            }
+        );
+    }
 }

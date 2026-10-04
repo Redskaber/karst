@@ -1,7 +1,7 @@
 # @path: harst/crate/karst_span/Cargo.toml
 # @author: redskaber
 # @datetime: 2026-09-30
-# @discription:
+# @description:
 #  karst_span -- Layer 0 crate: source position tracking.
 
 [package]

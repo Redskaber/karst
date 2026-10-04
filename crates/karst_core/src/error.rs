@@ -5,15 +5,19 @@
 //!
 //! the frozen semantic primitive kernel error
 
-use core::fmt;
 use std::error::Error;
+use std::fmt;
 
 use karst_syntax::{Symbol, SyntaxError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CoreError {
+    /// A name failed the [`crate::Symbol`](crate::symbol::Symbol) floor
+    /// (empty, whitespace, or control character).
     InvalidSymbol { text: String },
+    /// `fn` form binds the same parameter name twice.
     DuplicateParam { name: String },
+    /// `handle` installs two clauses for the same effect.
     DuplicateHandler { effect: String },
 }
 
@@ -48,6 +52,67 @@ impl Error for CoreError {}
 
 #[cfg(test)]
 mod tests {
+    //! Unit tests for the CoreError rendering surface (sub-stage test doc
+    //! FP4; R8 message-shape assertions).
 
-    // more ..
+    use super::*;
+
+    // ---------- negative (error surface) ----------
+
+    #[test]
+    fn display_invalid_symbol_mentions_text_and_rules() {
+        let err = CoreError::InvalidSymbol {
+            text: "a b".to_owned(),
+        };
+        let rendered = err.to_string();
+        assert!(rendered.contains("`a b`"));
+        assert!(rendered.contains("non-empty"));
+        assert!(rendered.contains("whitespace"));
+        assert!(!rendered.ends_with('.'));
+    }
+
+    #[test]
+    fn display_duplicate_param_mentions_name() {
+        let err = CoreError::DuplicateParam {
+            name: "x".to_owned(),
+        };
+        let rendered = err.to_string();
+        assert!(rendered.contains("`x`"));
+        assert!(rendered.contains("fn"));
+        assert_eq!(rendered.chars().next().unwrap(), 'd');
+    }
+
+    #[test]
+    fn display_duplicate_handler_mentions_effect() {
+        let err = CoreError::DuplicateHandler {
+            effect: "read".to_owned(),
+        };
+        let rendered = err.to_string();
+        assert!(rendered.contains("`read`"));
+        assert!(rendered.contains("handler"));
+    }
+
+    #[test]
+    fn error_variants_distinguishable_by_equality() {
+        let a = CoreError::InvalidSymbol {
+            text: "x".to_owned(),
+        };
+        let b = CoreError::DuplicateParam {
+            name: "x".to_owned(),
+        };
+        let c = CoreError::DuplicateHandler {
+            effect: "x".to_owned(),
+        };
+        assert_ne!(a, b);
+        assert_ne!(b, c);
+        assert_ne!(a, c);
+        // Same variant with same payload compares equal (test assertions
+        // rely on this).
+        assert_eq!(
+            a,
+            CoreError::InvalidSymbol {
+                text: "x".to_owned()
+            }
+        );
+    }
 }

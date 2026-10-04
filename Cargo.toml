@@ -1,7 +1,7 @@
 # @path: harst/Cargo.toml
 # @author: redskaber
 # @datetime: 2026-09-30
-# @discription:
+# @description:
 #  karst compiler - Cargo workspace root manifast.
 
 
@@ -23,7 +23,7 @@ authors = ["redskaber"]
 
 [package]
 name = "karst"
-discription = "karst compiler -- root aggregation crate"
+description = "karst compiler -- root aggregation crate"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -34,4 +34,9 @@ publish = false
 [dependencies]
 karst_span = { path = "crates/karst_span" }
 karst_syntax = { path = "crates/karst_syntax" }
+karst_core = { path = "crates/karst_core" }
 karst_reader = { path = "crates/karst_reader" }
+
+[[example]]
+name = "stage0_gate_audit_r1"
+path = "examples/audit/stage0_gate_audit_r1.rs"

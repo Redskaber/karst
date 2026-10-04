@@ -1,13 +1,13 @@
 # @path: harst/crate/karst_reader/Cargo.toml
 # @author: redskaber
 # @datetime: 2026-09-30
-# @discription:
+# @description:
 #  karst_reader -- ( Lexer + Parser ) producing spanned SyntaxObjects - Layer 2 crate (span -> syntax -> reader)
 
 [package]
 name = "karst_reader"
 edition = "2024"
-discription = "Lexer + Parser producing spanned SyntaxObjects"
+description = "Lexer + Parser producing spanned SyntaxObjects"
 version.workspace = true
 rust-version.workspace = true
 license.workspace = true

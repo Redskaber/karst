@@ -14,6 +14,9 @@ pub use parser::{NESTING_LIMIT, parse_program};
 pub use token::{Delimiter, Token, TokenKind};
 
 /// Top-level froms
+///
+/// Equivalent to [`lex`] followed by [`parse_program`]; both phases
+/// share the single [`ReadError`] surface.
 pub fn read_program(
     file_id: karst_span::FileId,
     source: &str,
