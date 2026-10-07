@@ -4,9 +4,10 @@ version = 4
 
 [[package]]
 name = "karst"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "karst_core",
+ "karst_expander",
  "karst_reader",
  "karst_span",
  "karst_syntax",
@@ -14,15 +15,24 @@ dependencies = [
 
 [[package]]
 name = "karst_core"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "karst_span",
  "karst_syntax",
 ]
 
 [[package]]
+name = "karst_expander"
+version = "0.5.0"
+dependencies = [
+ "karst_core",
+ "karst_span",
+ "karst_syntax",
+]
+
+[[package]]
 name = "karst_reader"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "karst_span",
  "karst_syntax",
@@ -30,11 +40,11 @@ dependencies = [
 
 [[package]]
 name = "karst_span"
-version = "0.4.0"
+version = "0.5.0"
 
 [[package]]
 name = "karst_syntax"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "karst_span",
 ]

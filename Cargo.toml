@@ -9,13 +9,14 @@
 resolver = "3"
 members = [
   "crates/karst_core",
+  "crates/karst_expander",
   "crates/karst_reader",
   "crates/karst_span",
   "crates/karst_syntax",
 ]
 
 [workspace.package]
-version = "0.4.0"
+version = "0.5.0"
 edition = "2024"
 rust-version = "1.97"
 license = "MIT"
@@ -33,6 +34,7 @@ publish = false
 
 [dependencies]
 karst_span = { path = "crates/karst_span" }
+karst_expander = { path = "crates/karst_expander" }
 karst_syntax = { path = "crates/karst_syntax" }
 karst_core = { path = "crates/karst_core" }
 karst_reader = { path = "crates/karst_reader" }

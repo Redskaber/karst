@@ -15,3 +15,6 @@ mod syntax_seed_tests;
 
 #[path = "v0/stage0/plan/reader_seed_tests.rs"]
 mod reader_seed_tests;
+
+#[path = "v0/stage0/plan/expander_seed_tests.rs"]
+mod expander_seed_tests;

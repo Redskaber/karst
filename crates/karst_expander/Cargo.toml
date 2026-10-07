@@ -1,0 +1,21 @@
+# @path: harst/crate/karst_expander/Cargo.toml
+# @author: redskaber
+# @datetime: 2026-10-04
+# @description:
+#  karst_expander -- Macro expansion: SyntaxObject -> CoreExpr
+
+[package]
+name = "karst_expander"
+edition = "2024"
+description = "Macro expansion: SyntaxObject -> CoreExpr"
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+
+[dependencies]
+karst_span = { path = "../karst_span" }
+karst_core = { path = "../karst_core" }
+karst_syntax = { path = "../karst_syntax" }
