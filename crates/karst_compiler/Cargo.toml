@@ -1,0 +1,18 @@
+# @path: crates/karst_compiler/Cargo.toml
+# @author: redskaber
+# @datetime: 2026-10-07
+# @description:
+#  karst_compiler -- Bytecode generation from CoreExpr
+
+
+[package]
+name = "karst_compiler"
+edition = "2024"
+description = "Bytecode generation from CoreExpr"
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
