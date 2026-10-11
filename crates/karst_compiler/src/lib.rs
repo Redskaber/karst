@@ -11,4 +11,5 @@ mod error;
 mod opcode;
 mod verify;
 
+pub use bytecode::{Bytecode, FuncProto, Instr};
 pub use opcode::Opcode;

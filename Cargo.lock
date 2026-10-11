@@ -17,6 +17,11 @@ dependencies = [
 [[package]]
 name = "karst_compiler"
 version = "0.6.0"
+dependencies = [
+ "karst_core",
+ "karst_span",
+ "karst_syntax",
+]
 
 [[package]]
 name = "karst_core"
