@@ -454,7 +454,7 @@ impl Complier {
                     debug_info: p.debug_info,
                 })
                 .collect(),
-            counts: self.consts,
+            consts: self.consts,
             globals: self.globals,
         })
     }

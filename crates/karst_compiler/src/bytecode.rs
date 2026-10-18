@@ -72,7 +72,7 @@ impl FuncProto {
 pub struct Bytecode {
     pub funcs: Vec<FuncProto>,
     /// Deduplicated constant pool
-    pub counts: Vec<LiteralValue>,
+    pub consts: Vec<LiteralValue>,
     /// Interned global symbol table
     pub globals: Vec<Symbol>,
 }
