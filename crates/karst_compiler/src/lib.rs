@@ -16,5 +16,7 @@ pub use compile::{compile, compile_program};
 pub use error::CompileError;
 pub use opcode::Opcode;
 
+/// Jump placeholder sentinel emitted by `emit_jump`
 pub const JUMP_PLACEHOLDER: u32 = u32::MAX;
+/// Compile-recursion depth cap
 pub const COMPILE_DEPTH_LIMIT: usize = 1024;

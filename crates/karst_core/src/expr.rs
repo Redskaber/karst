@@ -135,7 +135,7 @@ pub enum CoreExpr {
     /// Effect handing
     Handle {
         span: Span,
-        bpdy: Box<CoreExpr>,
+        body: Box<CoreExpr>,
         handlers: Vec<HandlerClause>,
     },
 }
@@ -220,11 +220,11 @@ impl CoreExpr {
             }
             CoreExpr::Handle {
                 span,
-                bpdy,
+                body,
                 handlers,
             } => {
                 f(*span);
-                bpdy.visit_spans(f);
+                body.visit_spans(f);
                 for handle in handlers {
                     f(handle.span);
                     handle.handler.visit_spans(f);
@@ -293,7 +293,7 @@ impl CoreExpr {
         }
         Ok(CoreExpr::Handle {
             span,
-            bpdy: Box::new(body),
+            body: Box::new(body),
             handlers,
         })
     }

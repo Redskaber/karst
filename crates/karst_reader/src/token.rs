@@ -95,4 +95,3 @@ impl Token {
         self.kind.kind_name()
     }
 }
-

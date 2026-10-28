@@ -36,7 +36,7 @@ pub enum Opcode {
     Sub,
     Mul,
     Div,
-    // effects
+    // effects (group extension — primitive carriers)
     PushHandler,
     PopHandler,
     Perform,
@@ -45,7 +45,7 @@ pub enum Opcode {
 }
 
 impl Opcode {
-    /// All operation, in declrations order
+    /// All operations, in declaration order
     pub const ALL: [Opcode; 24] = [
         Opcode::PushConst,
         Opcode::Pop,
@@ -73,6 +73,7 @@ impl Opcode {
         Opcode::Halt,
     ];
 
+    /// Stable diagnostic name (lowercase kebab form)
     pub fn kind_name(&self) -> &'static str {
         match self {
             Opcode::PushConst => "push-const",
@@ -107,6 +108,7 @@ impl Opcode {
         matches!(self, Opcode::Jump | Opcode::Ret | Opcode::Halt)
     }
 
+    /// Declared meaning of the `a`/`b` operand slots
     pub fn operand_help(&self) -> &'static str {
         match self {
             Opcode::PushConst => "a: constant-pool index",
@@ -126,7 +128,7 @@ impl Opcode {
         }
     }
 
-    ///Operands the instruction pops off the data stack `before` pushing
+    /// Operands the instruction pops off the data stack *before* pushing
     pub fn pops(self, a: u32, b: u32) -> u32 {
         match self {
             Opcode::PushConst | Opcode::Closure | Opcode::LoadLocal | Opcode::LoadGlobal => 0,
@@ -183,13 +185,75 @@ impl Opcode {
 }
 
 impl fmt::Display for Opcode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.kind_name())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    //! Opcode table tests (FP1/FP2): display names, terminator set,
+    //! operand declarations, and the pops/pushes/delta single source.
 
-    // more ...
+    use super::*;
+
+    #[test]
+    fn all_ops_have_unique_kebab_names() {
+        assert_eq!(Opcode::ALL.len(), 24, "opcode count is pinned at 24");
+        let mut names: Vec<&str> = Opcode::ALL.iter().map(|op| op.kind_name()).collect();
+        names.sort_unstable();
+        let len = names.len();
+        names.dedup();
+        assert_eq!(names.len(), len, "kind names must be unique");
+        for name in &names {
+            assert!(name.chars().next().is_some_and(char::is_lowercase));
+            assert!(!name.ends_with('.'));
+        }
+        assert_eq!(Opcode::Call.to_string(), "call");
+        assert_eq!(Opcode::JumpIfFalse.to_string(), "jump-if-false");
+        assert_eq!(Opcode::PushHandler.to_string(), "push-handler");
+    }
+
+    #[test]
+    fn stack_effect_table_matches_contract() {
+        // (op, a, b) -> (pops, pushes, delta) — §8.12 semantics plus the
+        // effect extension; the eval-order contract (§19.5) puts the
+        // callee on top, so `call a` pops a + 1.
+        let cases: [(Opcode, u32, u32, u32, u32); 12] = [
+            (Opcode::PushConst, 0, 0, 0, 1),
+            (Opcode::Pop, 0, 0, 1, 0),
+            (Opcode::Dup, 0, 0, 1, 2),
+            (Opcode::Swap, 0, 0, 2, 2),
+            (Opcode::Call, 2, 0, 3, 1),
+            (Opcode::Ret, 0, 0, 1, 0),
+            (Opcode::Closure, 1, 0, 0, 1),
+            (Opcode::JumpIfFalse, 5, 0, 1, 0),
+            (Opcode::MakePair, 0, 0, 2, 1),
+            (Opcode::LoadGlobal, 0, 0, 0, 1),
+            (Opcode::PushHandler, 3, 0, 1, 0),
+            (Opcode::Perform, 3, 2, 2, 1),
+        ];
+        for (op, a, b, pops, pushes) in cases {
+            assert_eq!(op.pops(a, b), pops, "pops for {op} a={a} b={b}");
+            assert_eq!(op.pushes(), pushes, "pushes for {op}");
+        }
+        // delta spot checks: call arity 2 -> -2; perform argc 2 -> -1;
+        // plain value producers -> +1.
+        assert_eq!(Opcode::Call.stack_delta(2, 0), -2);
+        assert_eq!(Opcode::Perform.stack_delta(3, 2), -1);
+        assert_eq!(Opcode::Call.stack_delta(0, 0), 0);
+        assert_eq!(Opcode::LoadLocal.stack_delta(0, 0), 1);
+        // terminators: only jump / ret / halt.
+        for op in Opcode::ALL {
+            assert_eq!(
+                op.is_terminator(),
+                matches!(op, Opcode::Jump | Opcode::Ret | Opcode::Halt),
+                "terminator set for {op}"
+            );
+        }
+        // operand_help is declared for every op (no "unknown").
+        for op in Opcode::ALL {
+            assert!(!op.operand_help().is_empty());
+        }
+    }
 }

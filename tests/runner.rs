@@ -18,3 +18,6 @@ mod reader_seed_tests;
 
 #[path = "v0/stage0/plan/expander_seed_tests.rs"]
 mod expander_seed_tests;
+
+#[path = "v0/stage0/plan/compiler_seed_tests.rs"]
+mod compiler_seed_tests;
