@@ -1,4 +1,4 @@
-# @path: harst/Cargo.toml
+# @path: karst/Cargo.toml
 # @author: redskaber
 # @datetime: 2026-09-30
 # @description:
@@ -14,6 +14,7 @@ members = [
   "crates/karst_reader",
   "crates/karst_span",
   "crates/karst_syntax",
+  "crates/karst_vm",
 ]
 
 [workspace.package]
@@ -40,6 +41,8 @@ karst_expander = { path = "crates/karst_expander" }
 karst_syntax = { path = "crates/karst_syntax" }
 karst_core = { path = "crates/karst_core" }
 karst_reader = { path = "crates/karst_reader" }
+karst_vm = { path = "crates/karst_vm" }
+
 
 [[example]]
 name = "stage0_gate_audit_r1"

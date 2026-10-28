@@ -1,0 +1,18 @@
+# @path: karst/crates/karst_vm/Cargo.toml
+# @author: redskaber
+# @datetime: 2026-10-28
+# @description:
+#  karst vm - Bytecode virtual machine (permanent rust base)
+
+
+[package]
+name = "karst_vm"
+edition = "2024"
+discription = "Bytecode virtual machine (permanent rust base)"
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]

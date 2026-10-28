@@ -12,6 +12,7 @@ dependencies = [
  "karst_reader",
  "karst_span",
  "karst_syntax",
+ "karst_vm",
 ]
 
 [[package]]
@@ -58,3 +59,7 @@ version = "0.6.0"
 dependencies = [
  "karst_span",
 ]
+
+[[package]]
+name = "karst_vm"
+version = "0.6.0"
