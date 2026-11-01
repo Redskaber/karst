@@ -13,3 +13,4 @@ mod value;
 mod vm;
 
 pub use builtin::Builtin;
+pub use value::{ClosureData, Heap, HeapObj, HeapRef, Value};

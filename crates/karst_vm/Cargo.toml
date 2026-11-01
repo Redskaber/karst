@@ -16,3 +16,4 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+karst_core = { path = "../karst_core" }
