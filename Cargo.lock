@@ -65,4 +65,5 @@ name = "karst_vm"
 version = "0.7.0"
 dependencies = [
  "karst_core",
+ "karst_syntax",
 ]

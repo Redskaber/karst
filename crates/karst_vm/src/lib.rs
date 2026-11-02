@@ -13,4 +13,5 @@ mod value;
 mod vm;
 
 pub use builtin::Builtin;
+pub use frame::{ContinuationSlot, DebugFrameSlot, ExceptionTableSlot, Frame, FrameExt};
 pub use value::{ClosureData, Heap, HeapObj, HeapRef, Value};

@@ -17,3 +17,4 @@ publish = false
 
 [dependencies]
 karst_core = { path = "../karst_core" }
+karst_syntax = { path = "../karst_syntax" }
